@@ -1,8 +1,9 @@
-from animals import get_all_animals, get_single_animal
-from customers import get_all_customers, get_single_customer
-from employees import get_all_employees, get_single_employee
-from locations import get_all_locations, get_single_location
+from animals import get_all_animals, get_single_animal, create_animal
+from customers import get_all_customers, get_single_customer, create_customer
+from employees import get_all_employees, get_single_employee, create_employee
+from locations import get_all_locations, get_single_location, create_location
 from http.server import BaseHTTPRequestHandler, HTTPServer
+import json
 
 
 # Here's a class. It inherits from another class.
@@ -16,7 +17,7 @@ class HandleRequests(BaseHTTPRequestHandler):
         # path is "/animals/1", the resulting list will
         # have "" at index 0, "animals" at index 1, and "1"
         # at index 2.
-        path_params = path.split("/")
+        path_params = path.split("/")  #[' ', 'animals', '2']
         resource = path_params[1]
         id = None
 
@@ -91,13 +92,64 @@ class HandleRequests(BaseHTTPRequestHandler):
     # Here's a method on the class that overrides the parent's method.
     # It handles any POST request.
     def do_POST(self):
-        # Set response code to 'Created'
         self._set_headers(201)
-
         content_len = int(self.headers.get('content-length', 0))
         post_body = self.rfile.read(content_len)
-        response = f"received post request:<br>{post_body}"
-        self.wfile.write(response.encode())
+
+        # Convert JSON string to a Python dictionary
+        post_body = json.loads(post_body)
+
+        # Parse the URL
+        (resource, id) = self.parse_url(self.path)
+
+        # Initialize new animal
+        new_animal = None
+
+        # Add a new animal to the list. Don't worry about
+        # the orange squiggle, you'll define the create_animal
+        # function next.
+        if resource == "animals":
+            new_animal = create_animal(post_body)
+
+        # Encode the new animal and send in response
+        self.wfile.write(f"{new_animal}".encode())
+
+        # Initialize new location
+        new_location = None
+
+        # Add a new location to the list. Don't worry about
+        # the orange squiggle, you'll define the create_location
+        # function next.
+        if resource == "locations":
+            new_location = create_location(post_body)
+
+        # Encode the new location and send in response
+        self.wfile.write(f"{new_location}".encode())
+
+        # Initialize new customer
+        new_customer = None
+
+        # Add a new customer to the list. Don't worry about
+        # the orange squiggle, you'll define the create_customer
+        # function next.
+        if resource == "customers":
+            new_customer = create_customer(post_body)
+
+        # Encode the new customer and send in response
+        self.wfile.write(f"{new_customer}".encode())
+
+        # Initialize new employee
+        new_employee = None
+
+        # Add a new employee to the list. Don't worry about
+        # the orange squiggle, you'll define the create_employee
+        # function next.
+        if resource == "employees":
+            new_employee = create_employee(post_body)
+
+        # Encode the new employee and send in response
+        self.wfile.write(f"{new_employee}".encode())
+
 
 
     # Here's a method on the class that overrides the parent's method.
