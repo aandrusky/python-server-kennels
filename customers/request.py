@@ -1,3 +1,7 @@
+from models import Customer
+import sqlite3
+import json
+
 CUSTOMERS = [
     {
       "id": 1,
