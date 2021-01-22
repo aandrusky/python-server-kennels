@@ -1,4 +1,4 @@
-from animals import get_all_animals, get_single_animal, create_animal, delete_animal, update_animal, get_animals_by_location, get_animals_by_status, delete_animal
+from animals import get_all_animals, get_single_animal, create_animal, delete_animal, update_animal, get_animals_by_location, get_animals_by_status, delete_animal, update_animal
 from customers import get_all_customers, get_single_customer, create_customer, delete_customer, update_customer, get_customers_by_email
 from employees import get_all_employees, get_single_employee, create_employee, delete_employee, update_employee, get_employees_by_location
 from locations import get_all_locations, get_single_location, create_location, delete_location, update_location
@@ -207,6 +207,28 @@ class HandleRequests(BaseHTTPRequestHandler):
             update_location(id, post_body)
 
         # Encode the new module and send in response
+        self.wfile.write("".encode())
+
+
+    def do_PUT(self):
+        content_len = int(self.headers.get('content-length', 0))
+        post_body = self.rfile.read(content_len)
+        post_body = json.loads(post_body)
+
+        # Parse the URL
+        (resource, id) = self.parse_url(self.path)
+
+        success = False
+
+        if resource == "animals":
+            success = update_animal(id, post_body)
+        # rest of the elif's
+
+        if success:
+            self._set_headers(204)
+        else:
+            self._set_headers(404)
+
         self.wfile.write("".encode())
 
 
