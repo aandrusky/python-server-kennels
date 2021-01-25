@@ -26,9 +26,9 @@ def get_all_locations():
         # Write the SQL query to get the information you want
         db_cursor.execute("""
         SELECT
-            a.id,
-            a.name,
-            a.address
+            l.id,
+            l.name,
+            l.address
         FROM location l
         """)
 
@@ -65,9 +65,9 @@ def get_single_location(id):
         # into the SQL statement.
         db_cursor.execute("""
         SELECT
-            a.id,
-            a.name,
-            a.address
+            l.id,
+            l.name,
+            l.address
         FROM location l
         WHERE l.id = ?
         """, ( id, ))
