@@ -4,32 +4,6 @@ from models import Animal
 from models import Location
 from models import Customer
 
-ANIMALS = [
-    {
-        "id": 1,
-        "name": "Snickers",
-        "species": "Dog",
-        "locationId": 1,
-        "customerId": 4,
-        "status": "Admitted"
-    },
-    {
-        "id": 2,
-        "name": "Gypsy",
-        "species": "Dog",
-        "locationId": 1,
-        "customerId": 2,
-        "status": "Admitted"
-    },
-    {
-        "id": 3,
-        "name": "Blue",
-        "species": "Cat",
-        "locationId": 2,
-        "customerId": 1,
-        "status": "Admitted"
-    }
-]
 
 
 
@@ -71,7 +45,7 @@ def get_all_animals():
                                 row['location_id'], row['customer_id'])
 
                 # Create a Location instance from the current row
-                location = Location(row['location_name'], row['location_address'])
+                location = Location(row['location_id'], row['location_name'], row['location_address'])
 
                 # Add the dictionary representation of the location to the animal
                 animal.location = location.__dict__
@@ -80,7 +54,7 @@ def get_all_animals():
                 animals.append(animal.__dict__)
 
                 # Use `json` package to properly serialize list as JSON
-                return json.dumps(animals)
+    return json.dumps(animals)
 
 
 # Function with a single parameter
@@ -100,6 +74,7 @@ def get_single_animal(id):
             a.customer_id,
             a.location_id,
             l.name location_name,
+            l.address location_address,
             c.name customer_name,
             c.id customer_id,
             c.address
@@ -119,8 +94,8 @@ def get_single_animal(id):
                             data['status'], data['location_id'],
                             data['customer_id'], data['id'])
 
-        location = Location(data['location_name'])
-        animal.location = location.__dict__
+        location_object = Location(data['location_id'], data['location_name'], data['location_address'])
+        animal.location = location_object.__dict__
     
         customer = Customer(data['customer_id'], data['customer_name'], data['address'])
         animal.customer = customer.__dict__
@@ -157,25 +132,19 @@ def create_animal(new_animal):
 
 
 def delete_animal(id):
-    # Initial -1 value for animal index, in case one isn't found
-    animal_index = -1
+    with sqlite3.connect("./kennel.db") as conn:
+        db_cursor = conn.cursor()
 
-    # Iterate the ANIMALS list, but use enumerate() so that you
-    # can access the index value of each item
-    for index, animal in enumerate(ANIMALS):
-        if animal["id"] == id:
-            # Found the animal. Store the current index.
-            animal_index = index
-
-    # If the animal was found, use pop(int) to remove it from list
-    if animal_index >= 0:
-        ANIMALS.pop(animal_index)
+        db_cursor.execute("""
+        DELETE FROM animal
+        WHERE id = ?
+        """, (id, ))
 
 
 def update_animal(id, new_animal):
     # Iterate the ANIMALS list, but use enumerate() so that
     # you can access the index value of each item.
-    for index, animal in enumerate(ANIMALS):
+    for index, animal in enumerate(Animal):
         if animal["id"] == id:
             # Found the animal. Update the value.
             ANIMALS[index] = new_animal
