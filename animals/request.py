@@ -1,6 +1,6 @@
 import sqlite3
 import json
-from models import Animal
+# from models import Animal
 from models import Location
 from models import Customer
 
@@ -53,7 +53,7 @@ def get_all_animals():
                 location = Location(row['location_id'], row['location_name'], row['location_address'])
 
                 customer = Customer(row['customer_id'], row['customer_name'], row['address'])
-                
+
                 animal.customer = customer.__dict__
                 # Add the dictionary representation of the location to the animal
                 animal.location = location.__dict__
@@ -121,7 +121,7 @@ def create_animal(new_animal):
             ( name, breed, status, location_id, customer_id )
         VALUES
             ( ?, ?, ?, ?, ?);
-        """, (new_animal['name'], new_animal['species'],
+        """, (new_animal['name'], new_animal['breed'],
               new_animal['status'], new_animal['location_id'],
               new_animal['customer_id'], ))
 
