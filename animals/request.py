@@ -18,17 +18,22 @@ def get_all_animals():
         # Write the SQL query to get the information you want
         db_cursor.execute("""
         SELECT
-            a.id,
+            a.id animal_id,
             a.name,
             a.breed,
             a.status,
             a.location_id,
             a.customer_id,
             l.name location_name,
-            l.address location_address
+            l.address location_address,
+            c.name customer_name,
+            c.id customer_id,
+            c.address
         FROM Animal a
         JOIN Location l
             ON l.id = a.location_id
+        JOIN customer c
+            ON c.id = a.customer_id
         """)
 
         # Initialize an empty list to hold all animal representations
@@ -41,12 +46,15 @@ def get_all_animals():
         for row in dataset:
 
             # Create an animal instance from the current row
-                animal = Animal(row['id'], row['name'], row['breed'], row['status'],
+                animal = Animal(row['animal_id'], row['name'], row['breed'], row['status'],
                                 row['location_id'], row['customer_id'])
 
                 # Create a Location instance from the current row
                 location = Location(row['location_id'], row['location_name'], row['location_address'])
 
+                customer = Customer(row['customer_id'], row['customer_name'], row['address'])
+                
+                animal.customer = customer.__dict__
                 # Add the dictionary representation of the location to the animal
                 animal.location = location.__dict__
 
@@ -67,12 +75,12 @@ def get_single_animal(id):
         # into the SQL statement.
         db_cursor.execute("""
         SELECT
-            a.id,
+            a.id animal_id,
             a.name animal_name,
             a.breed,
             a.status,
-            a.customer_id,
             a.location_id,
+            a.customer_id,
             l.name location_name,
             l.address location_address,
             c.name customer_name,
@@ -90,9 +98,9 @@ def get_single_animal(id):
         data = db_cursor.fetchone()
 
         # Create an animal instance from the current row
-        animal = Animal( data['animal_name'], data['breed'],
+        animal = Animal( data['animal_id'], data['animal_name'], data['breed'],
                             data['status'], data['location_id'],
-                            data['customer_id'], data['id'])
+                            data['customer_id'] )
 
         location_object = Location(data['location_id'], data['location_name'], data['location_address'])
         animal.location = location_object.__dict__
@@ -142,13 +150,32 @@ def delete_animal(id):
 
 
 def update_animal(id, new_animal):
-    # Iterate the ANIMALS list, but use enumerate() so that
-    # you can access the index value of each item.
-    for index, animal in enumerate(Animal):
-        if animal["id"] == id:
-            # Found the animal. Update the value.
-            ANIMALS[index] = new_animal
-            break
+    with sqlite3.connect("./kennel.db") as conn:
+        db_cursor = conn.cursor()
+
+        db_cursor.execute("""
+        UPDATE Animal
+            SET
+                name = ?,
+                breed = ?,
+                status = ?,
+                location_id = ?,
+                customer_id = ?
+        WHERE id = ?
+        """, (new_animal['name'], new_animal['breed'],
+              new_animal['status'], new_animal['location_id'],
+              new_animal['customer_id'], id, ))
+
+        # Were any rows affected?
+        # Did the client send an `id` that exists?
+        rows_affected = db_cursor.rowcount
+
+    if rows_affected == 0:
+        # Forces 404 response by main module
+        return False
+    else:
+        # Forces 204 response by main module
+        return True
 
 
 

@@ -75,21 +75,31 @@ def get_single_customer(id):
         return json.dumps(customer.__dict__)
 
 
-def create_customer(customer):
-    # Get the id value of the last customer in the list
-    max_id = CUSTOMERS[-1]["id"]
+def create_customer(new_customer):
+    with sqlite3.connect("./kennel.db") as conn:
+        db_cursor = conn.cursor()
 
-    # Add 1 to whatever that number is
-    new_id = max_id + 1
+        db_cursor.execute("""
+        INSERT INTO Customer
+            ( name, breed, status, location_id, customer_id )
+        VALUES
+            ( ?, ?, ?, ?, ?);
+        """, (new_customer['name'], new_customer['species'],
+              new_customer['status'], new_customer['location_id'],
+              new_customer['customer_id'], ))
 
-    # Add an `id` property to the customer dictionary
-    customer["id"] = new_id
+        # The `lastrowid` property on the cursor will return
+        # the primary key of the last thing that got added to
+        # the database.
+        id = db_cursor.lastrowid
 
-    # Add the customer dictionary to the list
-    CUSTOMERS.append(customer)
+        # Add the `id` property to the customer dictionary that
+        # was sent by the client so that the client sees the
+        # primary key in the response.
+        new_customer['id'] = id
 
-    # Return the dictionary with `id` property added
-    return customer
+
+    return json.dumps(new_customer)
 
 
 def delete_customer(id):
@@ -103,13 +113,32 @@ def delete_customer(id):
 
 
 def update_customer(id, new_customer):
-    # Iterate the CUSTOMERS list, but use enumerate() so that
-    # you can access the index value of each item.
-    for index, customer in enumerate(CUSTOMERS):
-        if customer["id"] == id:
-            # Found the customer. Update the value.
-            CUSTOMERS[index] = new_customer
-            break
+    with sqlite3.connect("./kennel.db") as conn:
+        db_cursor = conn.cursor()
+
+        db_cursor.execute("""
+        UPDATE Customer
+            SET
+                name = ?,
+                breed = ?,
+                status = ?,
+                location_id = ?,
+                customer_id = ?
+        WHERE id = ?
+        """, (new_customer['name'], new_customer['breed'],
+              new_customer['status'], new_customer['location_id'],
+              new_customer['customer_id'], id, ))
+
+        # Were any rows affected?
+        # Did the client send an `id` that exists?
+        rows_affected = db_cursor.rowcount
+
+    if rows_affected == 0:
+        # Forces 404 response by main module
+        return False
+    else:
+        # Forces 204 response by main module
+        return True
 
 
 def get_customers_by_email(email):

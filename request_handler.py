@@ -1,7 +1,7 @@
-from animals import get_all_animals, get_single_animal, create_animal, delete_animal, update_animal, get_animals_by_location, get_animals_by_status, delete_animal, update_animal
-from customers import get_all_customers, get_single_customer, create_customer, delete_customer, update_customer, get_customers_by_email
-from employees import get_all_employees, get_single_employee, create_employee, delete_employee, update_employee, get_employees_by_location
-from locations import get_all_locations, get_single_location, create_location, delete_location, update_location
+from animals import *
+from customers import *
+from employees import *
+from locations import *
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import json
 
@@ -190,36 +190,6 @@ class HandleRequests(BaseHTTPRequestHandler):
 
     # Here's a method on the class that overrides the parent's method.
     # It handles any PUT request.
-    def do_PUT(self):
-        self.do_POST()
-
-    def do_PUT(self):
-        self._set_headers(204)
-        content_len = int(self.headers.get('content-length', 0))
-        post_body = self.rfile.read(content_len)
-        post_body = json.loads(post_body)
-
-        # Parse the URL
-        (resource, id) = self.parse_url(self.path)
-
-        # Delete a single animal from the list
-        if resource == "animals":
-            update_animal(id, post_body)
-
-        # Delete a single customer from the list
-        if resource == "customers":
-            update_customer(id, post_body)
-
-        # Delete a single employee from the list
-        if resource == "employees":
-            update_employee(id, post_body)
-
-        # Delete a single location from the list
-        if resource == "locations":
-            update_location(id, post_body)
-
-        # Encode the new module and send in response
-        self.wfile.write("".encode())
 
 
     def do_PUT(self):
@@ -235,6 +205,17 @@ class HandleRequests(BaseHTTPRequestHandler):
         if resource == "animals":
             success = update_animal(id, post_body)
         # rest of the elif's
+        # Delete a single customer from the list
+        if resource == "customers":
+            update_customer(id, post_body)
+
+        # Delete a single employee from the list
+        if resource == "employees":
+            update_employee(id, post_body)
+
+        # Delete a single location from the list
+        if resource == "locations":
+            update_location(id, post_body)
 
         if success:
             self._set_headers(204)

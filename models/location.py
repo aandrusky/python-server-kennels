@@ -7,3 +7,8 @@ class Location():
         self.id = id
         self.name = location_name
         self.address = location_address
+
+
+
+
+        

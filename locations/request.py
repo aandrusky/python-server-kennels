@@ -70,22 +70,31 @@ def get_single_location(id):
         return json.dumps(location.__dict__)
 
 
-def create_location(location):
-    # Get the id value of the last location in the list
-    max_id = LOCATIONS[-1]["id"]
+def create_location(new_location):
+    with sqlite3.connect("./kennel.db") as conn:
+        db_cursor = conn.cursor()
 
-    # Add 1 to whatever that number is
-    new_id = max_id + 1
+        db_cursor.execute("""
+        INSERT INTO Location
+            ( name, breed, status, location_id, customer_id )
+        VALUES
+            ( ?, ?, ?, ?, ?);
+        """, (new_location['name'], new_location['species'],
+              new_location['status'], new_location['location_id'],
+              new_location['customer_id'], ))
 
-    # Add an `id` property to the location dictionary
-    location["id"] = new_id
+        # The `lastrowid` property on the cursor will return
+        # the primary key of the last thing that got added to
+        # the database.
+        id = db_cursor.lastrowid
 
-    # Add the location dictionary to the list
-    LOCATIONS.append(location)
+        # Add the `id` property to the location dictionary that
+        # was sent by the client so that the client sees the
+        # primary key in the response.
+        new_location['id'] = id
 
-    # Return the dictionary with `id` property added
-    return location
 
+    return json.dumps(new_location)
 
 def delete_location(id):
     with sqlite3.connect("./kennel.db") as conn:
@@ -98,10 +107,29 @@ def delete_location(id):
 
 
 def update_location(id, new_location):
-    # Iterate the LOCATIONS list, but use enumerate() so that
-    # you can access the index value of each item.
-    for index, location in enumerate(LOCATIONS):
-        if location["id"] == id:
-            # Found the location. Update the value.
-            LOCATIONS[index] = new_location
-            break
+    with sqlite3.connect("./kennel.db") as conn:
+        db_cursor = conn.cursor()
+
+        db_cursor.execute("""
+        UPDATE Location
+            SET
+                name = ?,
+                breed = ?,
+                status = ?,
+                location_id = ?,
+                customer_id = ?
+        WHERE id = ?
+        """, (new_location['name'], new_location['breed'],
+              new_location['status'], new_location['location_id'],
+              new_location['customer_id'], id, ))
+
+        # Were any rows affected?
+        # Did the client send an `id` that exists?
+        rows_affected = db_cursor.rowcount
+
+    if rows_affected == 0:
+        # Forces 404 response by main module
+        return False
+    else:
+        # Forces 204 response by main module
+        return True
